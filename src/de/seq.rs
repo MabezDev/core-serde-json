@@ -3,8 +3,6 @@ use serde::de;
 use crate::de::{Deserializer, Error, Result};
 
 pub(crate) struct SeqAccess<'a, 'b>
-where
-    'b: 'a,
 {
     first: bool,
     de: &'a mut Deserializer<'b>,

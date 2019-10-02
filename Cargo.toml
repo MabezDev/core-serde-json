@@ -1,18 +1,18 @@
 [package]
-authors = ["Jorge Aparicio <jorge@japaric.io>"]
+authors = ["Jorge Aparicio <jorge@japaric.io>", "James Munns <james.munns@ferrous-systems.com>"]
 categories = ["no-std"]
 description = "serde-json for no_std programs"
-documentation = "https://docs.rs/serde-json-core"
+documentation = "https://docs.rs/core-serde-json"
 edition = "2018"
 keywords = ["serde", "json"]
 license = "MIT OR Apache-2.0"
-name = "serde-json-core"
+name = "core-serde-json"
 readme = "README.md"
-repository = "https://japaric.github.io/serde-json-core/serde_json_core"
-version = "0.0.1"
+repository = "https://github.com/ferrous-systems/core-serde-json"
+version = "0.1.0"
 
 [dependencies]
-heapless = "0.4.0"
+heapless = "0.5.0"
 
 [dependencies.serde]
 default-features = false
