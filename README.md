@@ -1,10 +1,17 @@
-# `serde-json-core`
+# `core-serde-json`
 
 > [`serde-json`] for `no_std` programs
 
 [`serde-json`]: https://crates.io/crates/serde_json
 
-## [Documentation](https://japaric.github.io/serde-json-core/serde_json_core)
+## [Documentation](https://docs.rs/core-serde-json)
+
+## Provenance
+
+This crate is a fork of [japaric]'s [`serde-json-core`] library, which has not had active releases. This is meant to be a temporary (but stable) fork until these changes can be upstreamed and released.
+
+[japaric]: https://github.com/japaric/
+[`serde-json-core`]: https://github.com/japaric/serde-json-core
 
 ## License
 
