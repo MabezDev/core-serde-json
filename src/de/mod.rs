@@ -63,6 +63,12 @@ pub enum Error {
     /// JSON has a comma after the last value in an array or map.
     TrailingComma,
 
+    /// An error with a custom message, discarded due to lack of storage on no_std
+    Custom,
+
+    /// Unexpected or more fields encountered than expected
+    ExtraFields,
+
     #[doc(hidden)]
     __Extensible,
 }
@@ -88,10 +94,10 @@ impl<'a> Deserializer<'a> {
         self.index += 1;
     }
 
-    fn end(&mut self) -> Result<()> {
+    fn end(&mut self) -> Result<usize> {
         match self.parse_whitespace() {
             Some(_) => Err(Error::TrailingCharacters),
-            None => Ok(()),
+            None => Ok(self.index),
         }
     }
 
@@ -545,16 +551,19 @@ impl<'a, 'de> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        unreachable!()
+        Err(Error::ExtraFields)
     }
 }
 
 impl de::Error for Error {
+    // We can’t alloc a String to save the msg in, so we have this less-than-useful
+    // error as better than panicking with unreachable!. These errors can arise from
+    // derive, such as "not enough elements in a tuple" and "missing required field".
     fn custom<T>(_msg: T) -> Self
     where
         T: fmt::Display,
     {
-        unreachable!()
+        Error::Custom
     }
 }
 
@@ -601,19 +610,19 @@ impl fmt::Display for Error {
 }
 
 /// Deserializes an instance of type `T` from bytes of JSON text
-pub fn from_slice<'a, T>(v: &'a [u8]) -> Result<T>
+pub fn from_slice<'a, T>(v: &'a [u8]) -> Result<(T, usize)>
 where
     T: de::Deserialize<'a>,
 {
     let mut de = Deserializer::new(v);
     let value = de::Deserialize::deserialize(&mut de)?;
-    de.end()?;
+    let bytes_consumed = de.end()?;
 
-    Ok(value)
+    Ok((value, bytes_consumed))
 }
 
 /// Deserializes an instance of type T from a string of JSON text
-pub fn from_str<'a, T>(s: &'a str) -> Result<T>
+pub fn from_str<'a, T>(s: &'a str) -> Result<(T, usize)>
 where
     T: de::Deserialize<'a>,
 {
