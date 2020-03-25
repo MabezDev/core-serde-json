@@ -10,6 +10,8 @@ use heapless::{consts::*, String, Vec};
 use self::map::SerializeMap;
 use self::seq::SerializeSeq;
 use self::struct_::{SerializeStruct, SerializeStructVariant};
+use self::slice::{Slice, MutSlice, VecSlice};
+mod slice;
 
 mod map;
 mod seq;
@@ -54,17 +56,17 @@ impl fmt::Display for Error {
 
 pub(crate) struct Serializer<B>
 where
-    B: heapless::ArrayLength<u8>,
+    B: MutSlice,
 {
-    buf: Vec<u8, B>,
+    buf: B,
 }
 
 impl<B> Serializer<B>
 where
-    B: heapless::ArrayLength<u8>,
+    B: MutSlice,
 {
-    fn new() -> Self {
-        Serializer { buf: Vec::new() }
+    fn new(buf: B) -> Self {
+        Serializer { buf }
     }
 }
 
@@ -137,7 +139,7 @@ macro_rules! serialize_fmt {
 
 impl<'a, B> ser::Serializer for &'a mut Serializer<B>
 where
-    B: heapless::ArrayLength<u8>,
+    B: MutSlice,
 {
     type Ok = ();
     type Error = Error;
@@ -347,9 +349,9 @@ where
     B: heapless::ArrayLength<u8>,
     T: ser::Serialize + ?Sized,
 {
-    let mut ser = Serializer::new();
+    let mut ser = Serializer::new(VecSlice::new());
     value.serialize(&mut ser)?;
-    Ok(unsafe { String::from_utf8_unchecked(ser.buf) })
+    Ok(unsafe { String::from_utf8_unchecked(ser.buf.release()) })
 }
 
 /// Serializes the given data structure as a JSON byte vector
@@ -358,9 +360,19 @@ where
     B: heapless::ArrayLength<u8>,
     T: ser::Serialize + ?Sized,
 {
-    let mut ser = Serializer::new();
+    let mut ser = Serializer::new(VecSlice::new());
     value.serialize(&mut ser)?;
-    Ok(ser.buf)
+    Ok(ser.buf.release())
+}
+
+/// Serializes the given data structure as a JSON byte slice
+pub fn to_slice<'a, T>(slice: &'a mut [u8], value: &T) -> Result<&'a mut [u8]>
+where
+    T: ser::Serialize + ?Sized,
+{
+    let mut ser = Serializer::new(Slice::new(slice));
+    value.serialize(&mut ser)?;
+    Ok(ser.buf.release())
 }
 
 impl ser::Error for Error {
